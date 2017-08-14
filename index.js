@@ -1,3 +1,1 @@
-module.exports = {
-	AuthManager : require('./lib/authManager.js')
-};
+module.exports = require('./lib/authManager.js');

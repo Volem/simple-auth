@@ -1,49 +1,19 @@
 'use strict';
-const SimpleAuth = require('../index.js');
 
-let assert = require('assert');
+const sauth = require('../lib/authorizer.js');
 
-describe('AuthManager', function () {
-	describe('constructor', function () {
-		it('should set secret', function () {
-			let authMan = new SimpleAuth.AuthManager('secret');
-			assert.equal(authMan.Secret, 'secret');
-		});
-		it('should throw error : secret should be defined.', function () {
-			assert.throws(() => {
-				new SimpleAuth.AuthManager();
-			}, 'secret should be defined.');
-		});
-	});
+const myAppTokenGenerator = sauth.dailyTokenGenerator('myAppSecret');
 
-	let authMan = new SimpleAuth.AuthManager('secret');
-	let token;
-	describe('GenerateToken', function () {
-		it('should return token', function () {
-			token = authMan.GenerateToken('volem');
-			assert.ok(token);
-		});
-		it('should throw error : userdata is required', function () {
-			assert.throws(() => {
-				authMan.GenerateToken();
-			}, 'userdata is required');
-		});
-	});
+let volemToken = myAppTokenGenerator({ username: 'Volem' });
 
-	describe('Authenticate', function () {
-		it('should validate token and return userdata in callback', function (done) {
-			authMan.Authenticate(token, function (err, userdata) {
-				assert.ifError(err);
-				assert.ok(userdata);
-				assert.equal(userdata, 'volem');
-				done();
-			});
-		});
-		it('should return error in callback', function (done) {
-			authMan.Authenticate(token + 'invalid', function (err, userdata) {
-				assert.ok(err);
-				done(userdata);
-			});
-		});
-	});
+const myAppAuthorizer = sauth.authenticate('myAppSecret');
+
+const compose = (...fns) => fns.reduce((f, g) => (...args) => f(g(...args)));
+const pipe = (...fns) => fns.reduce((f, g) => (...args) => g(f(...args)));
+
+myAppAuthorizer(volemToken, function (err, decoded) {
+	if (err) {
+		return console.log(err);
+	}
+	console.log(decoded);
 });
